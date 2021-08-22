@@ -1,6 +1,7 @@
 # imports
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.optimize import curve_fit 
 
 def get_n_stock(t, tau):
     """
@@ -20,6 +21,8 @@ def get_n_stock(t, tau):
     cows = np.interp(t - tau, n[:, 0], n[:, 1])
     n_stock = dict(zip(t - tau, cows))
     return n_stock
+
+
 
 
 def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_surface, P_a, P_mar, b_1, b_2, b_3, tau, alpha):
@@ -113,3 +116,5 @@ def get_nitrate_concentration(t, b_1, b_2, b_3, tau, alpha):
         x[i + 1] = x[i] + dt * f2
     
     return x[-1]
+
+
