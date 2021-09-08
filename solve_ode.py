@@ -69,7 +69,7 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_surface, P_a, P_mar, b_1, b_2
     return dCdt, dPdt
     
 
-def get_nitrate_concentration(t, b_1, b_2, b_3, tau, alpha):
+def get_nitrate_concentration(t, b_1, b_2, b_3, tau, p_0, m_0, alpha):
     ''' Get numeric estimation of the nitrate concentration for a certain year
         Parameters:
         -----------
@@ -85,17 +85,17 @@ def get_nitrate_concentration(t, b_1, b_2, b_3, tau, alpha):
     t0 = 1980
     t1 = t
     dt = 1
-    x0 = [0.2, ?] # [initial nitrate concentration, initial pressure]
+    x0 = [0.2, p_0] # [initial nitrate concentration, initial pressure]
 
     steps = int(np.ceil((t1 - t0)/ dt))
-    t = np.arange(steps + 1) * dt
-    x = 0.*t
+    t_array = np.arange(steps + 1) * dt
+    x = 0.*t_array
     x[0] = x0
 
-    n = get_n_stock(t)
+    n = get_n_stock(t_array)
 
     for i in range(steps):
-        f0 = ode_model(t[i], *x[i], n, m_0=?, t_c=2010, t_mar=2020, P_surface=?, P_mar=0, 
+        f0 = ode_model(t_array[i], *x[i], n, m_0, t_c=2010, t_mar=2020, P_surface=0.1, P_mar=0, 
             b_1=b_1, 
             b_2=b_2,
             b_3=b_3,
@@ -104,7 +104,7 @@ def get_nitrate_concentration(t, b_1, b_2, b_3, tau, alpha):
         )
 
         x1 = x[i] + dt * f0
-        f1 = ode_model(t[i + 1], x1, n, m_0=?, t_c=2010, t_mar=2020, P_surface=?, P_mar=0, 
+        f1 = ode_model(t_array[i + 1], x1, n, m_0, t_c=2010, t_mar=2020, P_surface=0.1, P_mar=0, 
             b_1=b_1, 
             b_2=b_2,
             b_3=b_3,
@@ -114,7 +114,8 @@ def get_nitrate_concentration(t, b_1, b_2, b_3, tau, alpha):
 
         f2 = (f0 + f1) / 2
         x[i + 1] = x[i] + dt * f2
+        
     
-    return x[-1]
+    return t_array, x[-1]
 
 
