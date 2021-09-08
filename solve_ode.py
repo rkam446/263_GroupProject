@@ -25,7 +25,7 @@ def get_n_stock(t, tau):
 
 
 
-def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_surface, P_a, P_mar, b_1, b_2, b_3, tau, alpha):
+def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_surface, P_mar, b_1, b_2, b_3, tau, alpha):
     """
         Evaluate the rate of change of nitrate concentration and pressure inside the CV at time t.
         
@@ -61,7 +61,7 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_surface, P_a, P_mar, b_1, b_2
     """
     b = b_1 if t - tau > t_c else alpha * b_1
         
-    P_1 = P_a if t < t_mar else P_a + P_mar
+    P_1 = P_surface if t < t_mar else P_surface + P_mar
         
     dCdt = (-n_stock[t - tau] * b * (P - P_surface) + b_2 * C * (P - P_1 / 2)) / m_0
     dPdt = -b_3 * 2 * P if t < t_mar else -b_3 * (2 * P - P_mar / 2)
@@ -82,20 +82,25 @@ def get_nitrate_concentration(t, b_1, b_2, b_3, tau, p_0, m_0, alpha):
         x : float
             Estimated nitrate concentration for the year.
     '''
-    t0 = 1980
-    t1 = t
+    #t0 = 1980
+    #t1 = t
     dt = 1
     x0 = [0.2, p_0] # [initial nitrate concentration, initial pressure]
 
-    steps = int(np.ceil((t1 - t0)/ dt))
-    t_array = np.arange(steps + 1) * dt
-    x = 0.*t_array
-    x[0] = x0
+    t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
 
-    n = get_n_stock(t_array)
+    steps = int(np.ceil((t_nitrate[-1] - t_nitrate[0])/ dt))
+    t_array = np.arange(steps + 1) * dt
+    p = 0.*t_array
+    c = 0.*t_array
+    c[0] = x0[0]
+    p[0] = x0[1]
+    f2 = [0.,0.]
+
+    n = get_n_stock(t_array,tau)
 
     for i in range(steps):
-        f0 = ode_model(t_array[i], *x[i], n, m_0, t_c=2010, t_mar=2020, P_surface=0.1, P_mar=0, 
+        f0 = ode_model(t_array[i], c[i],p[i], n, m_0, t_c=2010, t_mar=2020, P_surface=0.1, P_mar=0, 
             b_1=b_1, 
             b_2=b_2,
             b_3=b_3,
@@ -103,19 +108,23 @@ def get_nitrate_concentration(t, b_1, b_2, b_3, tau, p_0, m_0, alpha):
             alpha=alpha
         )
 
-        x1 = x[i] + dt * f0
-        f1 = ode_model(t_array[i + 1], x1, n, m_0, t_c=2010, t_mar=2020, P_surface=0.1, P_mar=0, 
+        c1 = c[i] + dt * f0[0]
+        p1 = p[i] + dt * f0[1]
+        f1 = ode_model(t_array[i + 1], c1,p1, n, m_0, t_c=2010, t_mar=2020, P_surface=0.1, P_mar=0, 
             b_1=b_1, 
             b_2=b_2,
             b_3=b_3,
             tau=tau,                                   
             alpha=alpha
         )
+        
 
-        f2 = (f0 + f1) / 2
-        x[i + 1] = x[i] + dt * f2
+        f2[0] = (f0[0] + f1[0]) / 2
+        f2[1] = (f0[1] + f1[1]) / 2
+        c[i + 1] = c[i] + dt * f2[0]
+        p[i + 1] = p[i] + dt * f2[1]
         
     
-    return t_array, x[-1]
+    return np.interp(t_nitrate,t_array,c)
 
 

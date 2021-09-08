@@ -13,16 +13,15 @@ if __name__ == "__main__":
     #P_surface = ?
     #P_a = ?
     #P_mar = ?
-
-    t = 2019
-
-    t_calibrate, nitrate_calibrate = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1)
+    get_nitrate_concentration(t= 1,b_1=1,b_2=1,b_3=1,m_0=1,tau=1,p_0=1,alpha=1)
+    
+    t_calibrate, nitrate_calibrate = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack = True)
     # 2. Get optimal parameters using curve_fit()
     
-    n_stock = get_n_stock(t_calibrate)
+    #n_stock = get_n_stock(t_calibrate)
     #get stock numbers for t_calibrate
 
-    paras = sc.optimize.curve_fit(ode_model, xdata = t_calibrate, ydata = nitrate_calibrate)
+    paras = sc.optimize.curve_fit(get_nitrate_concentration, xdata = t_calibrate, ydata = nitrate_calibrate)
     [b_1, b_2, b_3, tau, p_0, m_0, alpha] = paras
     #? is intial guess
     
