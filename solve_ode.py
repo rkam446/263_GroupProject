@@ -60,7 +60,7 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau,
         dPdt : float
             Rate of change of P at t.
     """
-    b = b_1 if t - tau > t_c else alpha * b_1
+    b = b_1 * alpha if t - tau > t_c else b_1
         
     P_1 = P_a if t < t_mar else P_a + P_mar
         
@@ -70,7 +70,7 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau,
     return dCdt, dPdt
     
 
-def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=0.5, p_0=1, m_0=1e9, alpha=1):
+def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=0.5, p_0=1, m_0=1e9, alpha=0.5):
     ''' Get numeric estimation of the nitrate concentration for a certain year
         Parameters:
         -----------
@@ -134,3 +134,51 @@ def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=0.5, p_0=1, m_0=1e9, a
     return np.interp(t_nitrate, t_array, c)
 
 
+def fitted_model(b_1, b_2, b_3, tau, p_0, m_0, alpha):
+    dt = 0.1
+
+    t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
+    t_nitrate = t_nitrate[10:]
+
+    steps = int(np.ceil((t_nitrate[-1] - t_nitrate[0])/ dt))
+    t_array = np.arange(steps + 1) * dt + t_nitrate[0]
+
+    p = 0.*t_array
+    c = 0.*t_array
+    c[0] = 4.2
+    p[0] = p_0
+
+    dCdt_1 = 0.
+    dPdt_1 = 0.
+    dCdt_2 = 0.
+    dPdt_2 = 0.
+
+    n_stock = get_n_stock(t_array,tau)
+
+    for i in range(steps):
+        dCdt_1, dPdt_1 = ode_model(t_array[i], c[i], p[i], n_stock[t_array[i] - tau], m_0=m_0, t_c=2010, t_mar=2020, P_a=0.05, P_mar=0, 
+            b_1=b_1, 
+            b_2=b_2,
+            b_3=b_3,
+            tau=tau,
+            alpha=alpha
+        )
+
+        c1 = c[i] + dt * dCdt_1
+        p1 = p[i] + dt * dPdt_1
+
+        dCdt_2, dPdt_2 = ode_model(t_array[i + 1], c1,p1, n_stock[t_array[i] - tau], m_0, t_c=2010, t_mar=2020, P_a=0.05, P_mar=0,
+            b_1=b_1, 
+            b_2=b_2,
+            b_3=b_3,
+            tau=tau,                                   
+            alpha=alpha
+        )
+
+        dCdt = (dCdt_1 + dCdt_2) / 2
+        dPdt = (dPdt_1 + dPdt_2) / 2
+
+        c[i + 1] = c[i] + dt * dCdt
+        p[i + 1] = p[i] + dt * dPdt
+
+    return t_array, c

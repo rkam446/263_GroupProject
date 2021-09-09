@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sc
 from matplotlib import pyplot as plt
-from solve_ode import get_nitrate_concentration, ode_model, get_n_stock
+from solve_ode import fitted_model, get_nitrate_concentration, ode_model, get_n_stock
 
 if __name__ == "__main__":
     # 1. Get the nitrate concentration data
@@ -27,14 +27,14 @@ if __name__ == "__main__":
     #? is intial guess
     
     # 3. Solve ODE numerically using optimal parameters
-    nitrate_conc_num = get_nitrate_concentration(t=0, b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
+    t_array, nitrate_conc_num = fitted_model(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
     
     # 4. Plot numeric solution and actual data
 
     #plot data predicted by model
-    plt.plot(t_calibrate, nitrate_conc_num, label="Modelled")
+    plt.plot(t_array, nitrate_conc_num, label="Modelled")
     #plot measured data
-    plt.plot(t_calibrate, nitrate_calibrate, label="Experimental")
+    plt.scatter(t_calibrate, nitrate_calibrate, label="Experimental")
 
     #label graph
     plt.xlabel('time (yrs)')
