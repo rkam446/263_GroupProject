@@ -42,5 +42,6 @@ if __name__ == "__main__":
     plt.legend()
     plt.title('Experimental vs Modelled Nitrate Concentration for Southland Aquifer')
 
+    #show graph
     plt.show()
-    
+   
