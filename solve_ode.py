@@ -1,10 +1,9 @@
 # imports
-from ssl import create_default_context
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.optimize import curve_fit 
 
-def get_n_stock(t, tau):
+
+def get_n_stock(t, tau, forecast=False, multiplier=1):
     """
         Get an array of cattle numbers for every point on the time interval t.
 
@@ -19,11 +18,16 @@ def get_n_stock(t, tau):
             Array of number of cattle at each time interval.
     """
     year, cattle = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1, unpack=True)
+
+    if forecast:
+        final_cattle = cattle[-1] * multiplier
+        year = np.append(year, [2040])
+        cattle = np.append(cattle, final_cattle)
+
     interp_cattle = np.interp(t - tau, year, cattle)
     n_stock = dict(zip(t - tau, interp_cattle))
+
     return n_stock
-
-
 
 
 def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau, alpha):
@@ -64,13 +68,67 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau,
         
     P_1 = P_a if t < t_mar else P_a + P_mar
         
-    dCdt = (-n_stock * b * (P - P_a) + b_2 * C * (P - P_1 / 2)) / m_0
+    dCdt = (-n_stock * b * (P - 0.05) + b_2 * C * (P - P_1 / 2)) / m_0
     dPdt = -b_3 * 2 * P if t < t_mar else -b_3 * (2 * P - P_mar / 2)
 
     return dCdt, dPdt
-    
 
-def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=0.5, p_0=1, m_0=1e9, alpha=0.5):
+
+def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, dt=0.2, forecast=False, P_mar=0, multiplier=1):
+    if forecast:
+        steps = int(np.ceil((2040 - 1980)/ dt))
+        t_array = np.arange(steps + 1) * dt + 1980
+        n_stock = get_n_stock(t_array, tau, forecast=True, multiplier=multiplier)
+
+    else: 
+        t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
+        steps = int(np.ceil((t_nitrate[-1] - t_nitrate[0])/ dt))
+        t_array = np.arange(steps + 1) * dt + t_nitrate[0]
+        n_stock = get_n_stock(t_array, tau)
+
+    C = 0.*t_array
+    P = 0.*t_array
+
+    C[0] = 0.2
+    P[0] = p_0
+
+    dCdt_1 = 0.
+    dPdt_1 = 0.
+    dCdt_2 = 0.
+    dPdt_2 = 0.
+
+    for i in range(steps):
+        dCdt_1, dPdt_1 = ode_model(
+            t_array[i], C[i], P[i], n_stock[t_array[i] - tau], m_0=m_0, t_c=2010, t_mar=2020, P_a=0.1, P_mar=P_mar, 
+            b_1=b_1, 
+            b_2=b_2,
+            b_3=b_3,
+            tau=tau,
+            alpha=alpha
+        )
+
+        C_1 = C[i] + dt * dCdt_1
+        P_1 = P[i] + dt * dPdt_1
+
+        dCdt_2, dPdt_2 = ode_model(
+            t_array[i + 1], C_1, P_1, n_stock[t_array[i] - tau], m_0, t_c=2010, t_mar=2020, P_a=0.1, P_mar=P_mar,
+            b_1=b_1, 
+            b_2=b_2,
+            b_3=b_3,
+            tau=tau,                                   
+            alpha=alpha
+        )
+
+        dCdt = (dCdt_1 + dCdt_2) / 2
+        dPdt = (dPdt_1 + dPdt_2) / 2
+
+        C[i + 1] = C[i] + dt * dCdt
+        P[i + 1] = P[i] + dt * dPdt
+
+    return t_array, C, P
+
+
+def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=5, p_0=1, m_0=1e9, alpha=0.5):
     ''' Get numeric estimation of the nitrate concentration for a certain year
         Parameters:
         -----------
@@ -83,102 +141,6 @@ def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=0.5, p_0=1, m_0=1e9, a
         x : float
             Estimated nitrate concentration for the year.
     '''
-
-    dt = 0.1
-
     t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
-    t_nitrate = t_nitrate[10:]
-
-    steps = int(np.ceil((t_nitrate[-1] - t_nitrate[0])/ dt))
-    t_array = np.arange(steps + 1) * dt + t_nitrate[0]
-
-    p = 0.*t_array
-    c = 0.*t_array
-    c[0] = 4.2
-    p[0] = p_0
-
-    dCdt_1 = 0.
-    dPdt_1 = 0.
-    dCdt_2 = 0.
-    dPdt_2 = 0.
-
-    n_stock = get_n_stock(t_array,tau)
-
-    for i in range(steps):
-        dCdt_1, dPdt_1 = ode_model(t_array[i], c[i], p[i], n_stock[t_array[i] - tau], m_0=m_0, t_c=2010, t_mar=2020, P_a=0.05, P_mar=0, 
-            b_1=b_1, 
-            b_2=b_2,
-            b_3=b_3,
-            tau=tau,
-            alpha=alpha
-        )
-
-        c1 = c[i] + dt * dCdt_1
-        p1 = p[i] + dt * dPdt_1
-
-        dCdt_2, dPdt_2 = ode_model(t_array[i + 1], c1,p1, n_stock[t_array[i] - tau], m_0, t_c=2010, t_mar=2020, P_a=0.05, P_mar=0,
-            b_1=b_1, 
-            b_2=b_2,
-            b_3=b_3,
-            tau=tau,                                   
-            alpha=alpha
-        )
-
-        dCdt = (dCdt_1 + dCdt_2) / 2
-        dPdt = (dPdt_1 + dPdt_2) / 2
-
-        c[i + 1] = c[i] + dt * dCdt
-        p[i + 1] = p[i] + dt * dPdt
-        
-    
-    return np.interp(t_nitrate, t_array, c)
-
-
-def fitted_model(b_1, b_2, b_3, tau, p_0, m_0, alpha):
-    dt = 0.1
-
-    t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
-    t_nitrate = t_nitrate[10:]
-
-    steps = int(np.ceil((t_nitrate[-1] - t_nitrate[0])/ dt))
-    t_array = np.arange(steps + 1) * dt + t_nitrate[0]
-
-    p = 0.*t_array
-    c = 0.*t_array
-    c[0] = 4.2
-    p[0] = p_0
-
-    dCdt_1 = 0.
-    dPdt_1 = 0.
-    dCdt_2 = 0.
-    dPdt_2 = 0.
-
-    n_stock = get_n_stock(t_array,tau)
-
-    for i in range(steps):
-        dCdt_1, dPdt_1 = ode_model(t_array[i], c[i], p[i], n_stock[t_array[i] - tau], m_0=m_0, t_c=2010, t_mar=2020, P_a=0.05, P_mar=0, 
-            b_1=b_1, 
-            b_2=b_2,
-            b_3=b_3,
-            tau=tau,
-            alpha=alpha
-        )
-
-        c1 = c[i] + dt * dCdt_1
-        p1 = p[i] + dt * dPdt_1
-
-        dCdt_2, dPdt_2 = ode_model(t_array[i + 1], c1,p1, n_stock[t_array[i] - tau], m_0, t_c=2010, t_mar=2020, P_a=0.05, P_mar=0,
-            b_1=b_1, 
-            b_2=b_2,
-            b_3=b_3,
-            tau=tau,                                   
-            alpha=alpha
-        )
-
-        dCdt = (dCdt_1 + dCdt_2) / 2
-        dPdt = (dPdt_1 + dPdt_2) / 2
-
-        c[i + 1] = c[i] + dt * dCdt
-        p[i + 1] = p[i] + dt * dPdt
-
-    return t_array, c
+    t_array, C, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
+    return np.interp(t_nitrate, t_array, C)

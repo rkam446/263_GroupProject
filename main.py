@@ -1,46 +1,51 @@
 import numpy as np
+from scipy.optimize import curve_fit 
 import scipy as sc
 from matplotlib import pyplot as plt
-from solve_ode import fitted_model, get_nitrate_concentration, ode_model, get_n_stock
+from solve_ode import get_nitrate_concentration, solve_ode
 
 if __name__ == "__main__":
-    # 1. Get the nitrate concentration data
-    #t = ? #final time of model
-    #C = ?
-    #P = ?
-    #m_0 = ?
-    #t_c = ?
-    #P_surface = ?
-    #P_a = ?
-    #P_mar = ?
-    
+    # 1. Get measurement data
     t_calibrate, nitrate_calibrate = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
-    t_calibrate = t_calibrate[10:]
-    nitrate_calibrate = nitrate_calibrate[10:]
-    # 2. Get optimal parameters using curve_fit()
-    
-    #n_stock = get_n_stock(t_calibrate)
-    #get stock numbers for t_calibrate
+    year, cattle = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1, unpack=True)
+    # t_calibrate = t_calibrate[10:]
+    # nitrate_calibrate = nitrate_calibrate[10:]
 
-    paras, _ = sc.optimize.curve_fit(get_nitrate_concentration, xdata=t_calibrate, ydata=nitrate_calibrate)
+    # 2. Get optimal parameters using curve_fit()
+    #p_0 =[0.001, 24.897, 2.091, 5, -0.650, 14.35, 0.19]
+    paras, pcov = sc.optimize.curve_fit(get_nitrate_concentration, xdata=t_calibrate, ydata=nitrate_calibrate)
     [b_1, b_2, b_3, tau, p_0, m_0, alpha] = paras
-    #? is intial guess
+    perr = np.sqrt(np.diag(pcov))
     
     # 3. Solve ODE numerically using optimal parameters
-    t_array, nitrate_conc_num = fitted_model(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
-    
-    # 4. Plot numeric solution and actual data
-
-    #plot data predicted by model
-    plt.plot(t_array, nitrate_conc_num, label="Modelled")
-    #plot measured data
-    plt.scatter(t_calibrate, nitrate_calibrate, label="Experimental")
-
-    #label graph
-    plt.xlabel('time (yrs)')
-    plt.ylabel('nitrate concentration (mg/L)')
-    plt.legend()
-    plt.title('Experimental vs Modelled Nitrate Concentration for Southland Aquifer')
-
+    t_array, n_numeric, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel('time (yrs)')
+    ax1.set_ylabel('nitrate concentration (mg/L)')
+    ax1.set_title("Fitted Model")
+    ax1.plot(t_array, n_numeric, "c-")
+    ax1.scatter(t_calibrate, nitrate_calibrate, c="red")
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("cattle number")
+    ax2.scatter(year, cattle, c="black")
+    plt.savefig("fitted_model.jpg")
     plt.show()
     
+    # 4. Plot graphs
+    cattle_multipliers = [0, 0.5, 1, 2]
+
+    mar_values = [0, 0.1, 1]
+    forecasts = [[0]*len(cattle_multipliers)]*len(mar_values)
+
+    for j, k in enumerate(mar_values):    
+        fig, ax = plt.subplots()
+        ax.set_xlabel('time (yrs)')
+        ax.set_ylabel('nitrate concentration (mg/L)')
+        ax.set_title(f"MAR = {k} MPa")
+        for i, m in enumerate(cattle_multipliers):
+            t_array, forecasts[j][i], _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha, forecast=True, multiplier=m, P_mar=k)
+            ax.plot(t_array, forecasts[j][i], label=f"{m * 100}%")
+        
+        ax.legend()    
+        plt.savefig(f"forecast_{j}.jpg")
+        plt.show()
