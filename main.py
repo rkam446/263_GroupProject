@@ -36,7 +36,7 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax2.set_ylabel("cattle number")
     ax2.scatter(year, cattle, c="black")
-    plt.savefig("fitted_model.jpg")
+    #plt.savefig("fitted_model.jpg")
     plt.show()
 
     # 4. Plot graphs
@@ -49,12 +49,17 @@ if __name__ == "__main__":
         ax.set_xlabel('time (yrs)')
         ax.set_ylabel('nitrate concentration (mg/L)')
         ax.set_title(f"MAR = {k} MPa")
+
         for i, m in enumerate(cattle_multipliers):
-            t_array, forecasts[j][i], _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha, forecast=True, multiplier=m, P_mar=k)
-            ax.plot(t_array, forecasts[j][i], label=f"{m * 100}%")
+            t_array, forecast, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha, forecast=True, multiplier=m, P_mar=k)
+            ax.plot(t_array, forecast, label=f"{m * 100}%")
+
+            for l in range(n_samples):
+                t_array, forecast, _ = solve_ode(*values[l, :], forecast=True, multiplier=m, P_mar=k)
+                ax.plot(t_array, forecast, alpha=0.2)
         
-        ax.legend()    
-        plt.savefig(f"forecast_{j}.jpg")
+        ax.legend()
+        #plt.savefig(f"forecast_{j}.jpg")
         plt.show()
 
 
