@@ -17,6 +17,7 @@ def get_n_stock(t, tau, forecast=False, multiplier=1):
         n_stock : float array
             Array of number of cattle at each time interval.
     """
+    #Pull cow and year data from file
     year, cattle = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1, unpack=True)
 
     if forecast:
@@ -64,6 +65,7 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau,
         dPdt : float
             Rate of change of P at t.
     """
+    #Use either pre 2010 ODE or post 2010 ODE
     b = b_1 * alpha if t - tau > t_c else b_1
         
     P_1 = P_a if t < t_mar else P_a + P_mar
@@ -118,7 +120,7 @@ def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, dt=0.2, forecast=False, P_mar
             tau=tau,                                   
             alpha=alpha
         )
-
+        #Average the gradients of step 1 and step 2
         dCdt = (dCdt_1 + dCdt_2) / 2
         dPdt = (dPdt_1 + dPdt_2) / 2
 
