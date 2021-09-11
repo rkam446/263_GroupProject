@@ -1,8 +1,9 @@
 import numpy as np
+from numpy.core.function_base import linspace
 from scipy.optimize import curve_fit 
 import scipy as sc
 from matplotlib import pyplot as plt
-from solve_ode import get_nitrate_concentration, solve_ode
+from solve_ode import get_nitrate_concentration, solve_ode, analytic
 
 if __name__ == "__main__":
     # 1. Get measurement data
@@ -16,7 +17,14 @@ if __name__ == "__main__":
     paras, pcov = sc.optimize.curve_fit(get_nitrate_concentration, xdata=t_calibrate, ydata=nitrate_calibrate)
     [b_1, b_2, b_3, tau, p_0, m_0, alpha] = paras
     perr = np.sqrt(np.diag(pcov))
+
+    fig, ax = plt.subplots()
+    ps = np.random.multivariate_normal(paras[0:2], pcov[0:2,0:2], 10)   # samples from posterior
     
+
+    
+
+
     # 3. Solve ODE numerically using optimal parameters
     t_array, n_numeric, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
     fig, ax1 = plt.subplots()
@@ -30,13 +38,12 @@ if __name__ == "__main__":
     ax2.scatter(year, cattle, c="black")
     plt.savefig("fitted_model.jpg")
     plt.show()
-    
+
     # 4. Plot graphs
     cattle_multipliers = [0, 0.5, 1, 2]
 
     mar_values = [0, 0.1, 1]
     forecasts = [[0]*len(cattle_multipliers)]*len(mar_values)
-
     for j, k in enumerate(mar_values):    
         fig, ax = plt.subplots()
         ax.set_xlabel('time (yrs)')
@@ -49,3 +56,13 @@ if __name__ == "__main__":
         ax.legend()    
         plt.savefig(f"forecast_{j}.jpg")
         plt.show()
+
+
+
+    t_array, C, *_ = solve_ode(1,1,1,0,1,1,1,0.1,Benchmark=True)
+
+
+
+    plt.plot(t_array, analytic(t_array), 'rx')
+    plt.plot(t_array, C)
+    plt.show()
