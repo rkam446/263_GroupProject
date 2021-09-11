@@ -16,6 +16,11 @@ if __name__ == "__main__":
     paras, pcov = sc.optimize.curve_fit(get_nitrate_concentration, xdata=t_calibrate, ydata=nitrate_calibrate)
     [b_1, b_2, b_3, tau, p_0, m_0, alpha] = paras
     perr = np.sqrt(np.diag(pcov))
+
+    np.random.seed(10)
+    n_samples = 10
+    
+    values = np.random.normal(loc=paras, scale=perr, size=(n_samples, len(paras)))
     
     # 3. Solve ODE numerically using optimal parameters
     t_array, n_numeric, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
@@ -28,24 +33,29 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax2.set_ylabel("cattle number")
     ax2.scatter(year, cattle, c="black")
-    plt.savefig("fitted_model.jpg")
+    #plt.savefig("fitted_model.jpg")
     plt.show()
     
     # 4. Plot graphs
     cattle_multipliers = [0, 0.5, 1, 2]
 
     mar_values = [0, 0.1, 1]
-    forecasts = [[0]*len(cattle_multipliers)]*len(mar_values)
+    forecast = list()
 
-    for j, k in enumerate(mar_values):    
+    for j, k in enumerate(mar_values): 
         fig, ax = plt.subplots()
         ax.set_xlabel('time (yrs)')
         ax.set_ylabel('nitrate concentration (mg/L)')
         ax.set_title(f"MAR = {k} MPa")
+
         for i, m in enumerate(cattle_multipliers):
-            t_array, forecasts[j][i], _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha, forecast=True, multiplier=m, P_mar=k)
-            ax.plot(t_array, forecasts[j][i], label=f"{m * 100}%")
+            t_array, forecast, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha, forecast=True, multiplier=m, P_mar=k)
+            ax.plot(t_array, forecast, label=f"{m * 100}%")
+
+            for l in range(n_samples):
+                t_array, forecast, _ = solve_ode(*values[l, :], forecast=True, multiplier=m, P_mar=k)
+                ax.plot(t_array, forecast, alpha=0.2)
         
-        ax.legend()    
-        plt.savefig(f"forecast_{j}.jpg")
+        ax.legend()
+        #plt.savefig(f"forecast_{j}.jpg")
         plt.show()
