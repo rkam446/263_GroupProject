@@ -84,7 +84,7 @@ def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=
     
     #When used for benchmarking initalise with values used for analytical solution
     if Benchmark:
-        steps = int(np.ceil((100/ dt)))
+        steps = int(np.ceil((100/dt)))
         t_array = np.arange(steps + 1) * dt
         n_stock = dict(zip(t_array - tau, [1] * steps))
         P_a = 2

@@ -20,7 +20,6 @@ if __name__ == "__main__":
     [b_1, b_2, b_3, tau, p_0, m_0, alpha] = paras
     perr = np.sqrt(np.diag(pcov))
 
-    fig, ax = plt.subplots()
     ps = np.random.multivariate_normal(paras[0:2], pcov[0:2,0:2], 10)   # samples from posterior
     a,b, posterior = grid_search(b_1, b_2, b_3, tau, p_0, m_0, alpha)
     N = 10
@@ -28,9 +27,6 @@ if __name__ == "__main__":
 
     # Produce Model Predictions with uncertainty.
     model_ensemble(samples,b_1, b_2, b_3, tau, p_0, m_0, alpha)
-
-    
-
 
     # 3. Solve ODE numerically using optimal parameters
     t_array, n_numeric, *_ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
