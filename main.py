@@ -5,6 +5,7 @@ import scipy as sc
 from matplotlib import pyplot as plt
 from solve_ode import get_nitrate_concentration, solve_ode, analytic
 from uncertainty import grid_search, construct_samples, model_ensemble
+from Tests import Plot_benchmark
 
 if __name__ == "__main__":
     # 1. Get measurement data
@@ -38,17 +39,17 @@ if __name__ == "__main__":
     ax1.set_xlabel('time (yrs)')
     ax1.set_ylabel('nitrate concentration (mg/L)')
     ax1.set_title("Fitted Model")
-    ax1.plot(t_array, n_numeric, "c-", label = 'Fitted Model')
-    #ax1.plot(t_array, no_carbon, 'b-')
+    ax1.plot(t_array, n_numeric, "c-", label = 'With Carbon Sink')
+    ax1.plot(t_array, no_carbon, 'b-', label = 'Without Carbon Sink')
     ax1.scatter(t_calibrate, nitrate_calibrate, c="red", label = 'Recorded Nitrate Concentration')
-    #ax2 = ax1.twinx()
-    #ax2.set_ylabel("cattle number")
-    #ax2.scatter(year, cattle, c="black")
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("cattle number")
+    ax2.scatter(year, cattle, c="black")
     ax1.legend()
     plt.savefig("fitted_model.jpg")
     plt.show()
 
-    
+    Plot_benchmark()
     
 
 
