@@ -80,7 +80,7 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau,
 
 def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=False, P_mar=0, multiplier=1, Benchmark = False):
     if Benchmark:
-        steps = int(np.ceil((100/ dt)))
+        steps = int(np.ceil((100/dt)))
         t_array = np.arange(steps + 1) * dt
         n_stock = dict(zip(t_array - tau, [1] * steps))
         P_a = 2

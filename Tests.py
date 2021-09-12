@@ -29,7 +29,7 @@ ans = 6187477.006990
 check = x[1][-1] - ans
 assert check < tol
 
-t_array, C, *_ = solve_ode(1,1,1,0,1,1,1,0.1,Benchmark=True)
+t_array, C, *_ = solve_ode(1,1,1,0,1,1,1,dt=2,Benchmark=True)
 plt.plot(t_array, analytic(t_array), 'rx')
 plt.plot(t_array, C)
 plt.show()

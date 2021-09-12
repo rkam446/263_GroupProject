@@ -19,17 +19,12 @@ if __name__ == "__main__":
     [b_1, b_2, b_3, tau, p_0, m_0, alpha] = paras
     perr = np.sqrt(np.diag(pcov))
 
-    fig, ax = plt.subplots()
     ps = np.random.multivariate_normal(paras[0:2], pcov[0:2,0:2], 10)   # samples from posterior
     a,b, posterior = grid_search(b_1, b_2, b_3, tau, p_0, m_0, alpha)
     N = 10
     samples = construct_samples(a, b, posterior, N, b_1, b_2, b_3, tau, p_0, m_0, alpha)
 
-    # this task relies on the output of TASKS 2 and 3, so don't comment those commands
     model_ensemble(samples,b_1, b_2, b_3, tau, p_0, m_0, alpha)
-
-    
-
 
     # 3. Solve ODE numerically using optimal parameters
     t_array, n_numeric, *_ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
@@ -38,9 +33,10 @@ if __name__ == "__main__":
     ax1.set_xlabel('time (yrs)')
     ax1.set_ylabel('nitrate concentration (mg/L)')
     ax1.set_title("Fitted Model")
-    ax1.plot(t_array, n_numeric, "c-")
-    ax1.plot(t_array, no_carbon, 'b-')
-    ax1.scatter(t_calibrate, nitrate_calibrate, c="red")
+    ax1.plot(t_array, n_numeric, "c-", label="Model")
+    #ax1.plot(t_array, no_carbon, 'b-')
+    ax1.scatter(t_calibrate, nitrate_calibrate, c="red", label="Nitrate Data")
+    ax1.scatter([],[], c="black", label="Cattle Data")
     ax2 = ax1.twinx()
     ax2.set_ylabel("cattle number")
     ax2.scatter(year, cattle, c="black")
