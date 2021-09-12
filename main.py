@@ -50,6 +50,18 @@ if __name__ == "__main__":
     plt.savefig("fitted_model.jpg")
     plt.show()
 
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel('time (yrs)')
+    ax1.set_ylabel('nitrate concentration (mg/L)')
+    ax1.set_title("Residuals")
+    #Calculate residuals by taking the difference between model and observations
+    ax1.scatter(t_calibrate, get_nitrate_concentration(t_array, b_1, b_2, b_3, tau, p_0, m_0, alpha) - nitrate_calibrate)
+    ax1.plot(t_calibrate, [0]*len(t_calibrate), 'r-')
+    ax1.legend()
+    plt.savefig("fitted_model.jpg")
+    plt.show()
+
+
     Plot_benchmark()
     
 
