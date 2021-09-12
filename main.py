@@ -5,6 +5,7 @@ import scipy as sc
 from matplotlib import pyplot as plt
 from solve_ode import get_nitrate_concentration, solve_ode, analytic
 from uncertainty import grid_search, construct_samples, model_ensemble
+from Tests import Plot_benchmark
 
 if __name__ == "__main__":
     # 1. Get measurement data
@@ -24,19 +25,20 @@ if __name__ == "__main__":
     N = 10
     samples = construct_samples(a, b, posterior, N, b_1, b_2, b_3, tau, p_0, m_0, alpha)
 
+    # Produce Model Predictions with uncertainty.
     model_ensemble(samples,b_1, b_2, b_3, tau, p_0, m_0, alpha)
 
     # 3. Solve ODE numerically using optimal parameters
     t_array, n_numeric, *_ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
     t_array, no_carbon, *_ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=1)
+    #Plot solutions on graphs
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('time (yrs)')
     ax1.set_ylabel('nitrate concentration (mg/L)')
     ax1.set_title("Fitted Model")
-    ax1.plot(t_array, n_numeric, "c-", label="Model")
-    #ax1.plot(t_array, no_carbon, 'b-')
-    ax1.scatter(t_calibrate, nitrate_calibrate, c="red", label="Nitrate Data")
-    ax1.scatter([],[], c="black", label="Cattle Data")
+    ax1.plot(t_array, n_numeric, "c-", label = 'With Carbon Sink')
+    ax1.plot(t_array, no_carbon, 'b-', label = 'Without Carbon Sink')
+    ax1.scatter(t_calibrate, nitrate_calibrate, c="red", label = 'Recorded Nitrate Concentration')
     ax2 = ax1.twinx()
     ax2.set_ylabel("cattle number")
     ax2.scatter(year, cattle, c="black")
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     plt.savefig("fitted_model.jpg")
     plt.show()
 
-    
+    Plot_benchmark()
     
 
 
