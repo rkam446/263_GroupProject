@@ -22,11 +22,13 @@ def get_n_stock(t, tau, forecast=False, multiplier=1):
     #Pull cow and year data from file
     year, cattle = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1, unpack=True)
 
+    #If function is used to forecast then solve out to 2040
     if forecast:
         final_cattle = cattle[-1] * multiplier
         year = np.append(year, [2040])
         cattle = np.append(cattle, final_cattle)
 
+    #Interpolate cattle values between year values 
     interp_cattle = np.interp(t - tau, year, cattle)
     n_stock = dict(zip(t - tau, interp_cattle))
 
@@ -79,19 +81,21 @@ def ode_model(t, C, P, n_stock, m_0, t_c, t_mar, P_a, P_mar, b_1, b_2, b_3, tau,
 
 
 def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=False, P_mar=0, multiplier=1, Benchmark = False):
+    
+    #When used for benchmarking initalise with values used for analytical solution
     if Benchmark:
         steps = int(np.ceil((100/ dt)))
         t_array = np.arange(steps + 1) * dt
         n_stock = dict(zip(t_array - tau, [1] * steps))
         P_a = 2
         P_s = 1
-    
+    #When used for forecasting solve until 2040.
     elif forecast:
           steps = int(np.ceil((2040 - 1980)/ dt))
           t_array = np.arange(steps + 1) * dt + 1980
           n_stock = get_n_stock(t_array, tau, forecast=True, multiplier=multiplier)
           P_a = 0.1
-
+    #When used for fitting to observed data only solve until 2020
     else: 
          t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
          steps = int(np.ceil((t_nitrate[-1] - t_nitrate[0])/ dt))
@@ -99,11 +103,14 @@ def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=
          n_stock = get_n_stock(t_array, tau)
          P_a = 0.1
 
+    #Initialise arrat to correct size
     C = 0.*t_array
     P = 0.*t_array
 
+    #Initial conditions of ODE 
     C[0] = 2 if Benchmark else 0.2
     P[0] = p_0
+
 
     dCdt_1 = 0.
     dPdt_1 = 0.
@@ -111,6 +118,7 @@ def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=
     dPdt_2 = 0.
 
     for i in range(steps):
+        #Calculate gradients at original point
         dCdt_1, dPdt_1 = ode_model(
             t_array[i], C[i], P[i], n_stock[t_array[i] - tau], m_0=m_0, t_c=2010, t_mar=2020, P_a=P_a, P_mar=P_mar, 
             b_1=b_1, 
@@ -120,10 +128,11 @@ def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=
             alpha=alpha,
             P_s=P_s
         )
-
+        #Use gradient to find predicted point
         C_1 = C[i] + dt * dCdt_1
         P_1 = P[i] + dt * dPdt_1
-
+        
+        #Find gradient of predicted point
         dCdt_2, dPdt_2 = ode_model(
             t_array[i + 1], C_1, P_1, n_stock[t_array[i] - tau], m_0, t_c=2010, t_mar=2020, P_a=P_a, P_mar=P_mar,
             b_1=b_1, 
@@ -133,10 +142,11 @@ def solve_ode(b_1, b_2, b_3, tau, p_0, m_0, alpha, P_s = 0.05, dt=0.2, forecast=
             alpha=alpha,
             P_s=P_s
         )
-        #Average the gradients of step 1 and step 2
+        #Average the gradients of predicted and original point to find corrected gradient
         dCdt = (dCdt_1 + dCdt_2) / 2
         dPdt = (dPdt_1 + dPdt_2) / 2
-
+        
+        #Find the next value using the corrected gradient 
         C[i + 1] = C[i] + dt * dCdt
         P[i + 1] = P[i] + dt * dPdt
 
@@ -156,15 +166,21 @@ def get_nitrate_concentration(t, b_1=1, b_2=1, b_3=1, tau=5, p_0=1, m_0=1e9, alp
         x : float
             Estimated nitrate concentration for the year.
     '''
+
+    #Pull data from file
     t_nitrate, _ = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
+    #Solve using data from file 
     t_array, C, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
+    #Return interpolated values of the solution
     return np.interp(t_nitrate, t_array, C)
 
 
 def analytic(t):
 
+    #Initalise solution matrix 
     C = [0.]*t
 
+    #Loop through analytical solution to create array
     for i in range(len(t)):
         C[i] = 1 + np.exp(-t[i]-0.5 * np.exp(-2 * t[i]) + 0.5)
 

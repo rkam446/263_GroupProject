@@ -3,16 +3,18 @@ from matplotlib import pyplot as plt
 
 textsize = 16
 
+#Get data from file
 t_nitrate, nitrate = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
 t_cattle, cattle = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1, unpack=True)
 
+#Plot data
 fig, ax1 = plt.subplots()
 
 ax1.set_xlabel("Year")
 ax1.set_ylabel("Nitrate Concentration (mg/L)")
 ax1.scatter(t_nitrate, nitrate, label="Nitrate", c="red")
 ax1.scatter([], [], label="Cattle", c="black")
-v = 1.
+v = 1. #Use one standard deviation
 ax1.errorbar(t_nitrate,nitrate,yerr=v,fmt='ro', label='data')
 ax2 = ax1.twinx()
 ax2.set_ylabel("Cattle Numbers")

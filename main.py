@@ -26,7 +26,7 @@ if __name__ == "__main__":
     N = 10
     samples = construct_samples(a, b, posterior, N, b_1, b_2, b_3, tau, p_0, m_0, alpha)
 
-    # this task relies on the output of TASKS 2 and 3, so don't comment those commands
+    # Produce Model Predictions with uncertainty.
     model_ensemble(samples,b_1, b_2, b_3, tau, p_0, m_0, alpha)
 
     
@@ -35,6 +35,7 @@ if __name__ == "__main__":
     # 3. Solve ODE numerically using optimal parameters
     t_array, n_numeric, *_ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha)
     t_array, no_carbon, *_ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=1)
+    #Plot solutions on graphs
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('time (yrs)')
     ax1.set_ylabel('nitrate concentration (mg/L)')
