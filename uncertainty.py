@@ -152,8 +152,8 @@ def model_ensemble(samples,b_1, b_2, b_3, tau, p_0, m_0, alpha):
 
     # get the data
     tp,po = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)	
-    ax.axvline(1980, color='b', linestyle=':', label='calibration/forecast')
-
+    
+    
     # 4. plot Wairakei data as error bars
     # *hint* see TASK 1 for appropriate plotting commands
     v = 1.

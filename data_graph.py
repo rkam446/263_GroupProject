@@ -10,6 +10,8 @@ ax1.set_xlabel("Year")
 ax1.set_ylabel("Nitrate Concentration (mg/L)")
 ax1.scatter(t_nitrate, nitrate, label="Nitrate", c="red")
 ax1.scatter([], [], label="Cattle", c="black")
+v = 1.
+ax1.errorbar(t_nitrate,nitrate,yerr=v,fmt='ro', label='data')
 ax2 = ax1.twinx()
 ax2.set_ylabel("Cattle Numbers")
 ax2.scatter(t_cattle, cattle, label="Cattle", c="black")
