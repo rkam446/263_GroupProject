@@ -33,6 +33,7 @@ if __name__ == "__main__":
     ax1.set_xlabel('time (yrs)')
     ax1.set_ylabel('nitrate concentration (mg/L)')
     ax1.set_title("Fitted Model")
+<<<<<<< HEAD
     ax1.plot(t_array, n_numeric, "c-", label="Model")
     #ax1.plot(t_array, no_carbon, 'b-')
     ax1.scatter(t_calibrate, nitrate_calibrate, c="red", label="Nitrate Data")
@@ -40,6 +41,14 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax2.set_ylabel("cattle number")
     ax2.scatter(year, cattle, c="black")
+=======
+    ax1.plot(t_array, n_numeric, "c-", label = 'Fitted Model')
+    #ax1.plot(t_array, no_carbon, 'b-')
+    ax1.scatter(t_calibrate, nitrate_calibrate, c="red", label = 'Recorded Nitrate Concentration')
+    #ax2 = ax1.twinx()
+    #ax2.set_ylabel("cattle number")
+    #ax2.scatter(year, cattle, c="black")
+>>>>>>> 277eeff4a6e93ae20a65b0c7473f6069b296a966
     ax1.legend()
     plt.savefig("fitted_model.jpg")
     plt.show()

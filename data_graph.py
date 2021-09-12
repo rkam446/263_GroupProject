@@ -1,6 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+textsize = 16
+
 t_nitrate, nitrate = np.genfromtxt("data/nl_n.csv", delimiter=",", skip_header=1, unpack=True)
 t_cattle, cattle = np.genfromtxt("data/nl_cows.txt", delimiter=",", skip_header=1, unpack=True)
 
