@@ -30,11 +30,15 @@ check = x[1][-1] - ans
 assert check < tol
 
 t_array, C, *_ = solve_ode(1,1,1,0,1,1,1,0.1,Benchmark=True)
-plt.plot(t_array, analytic(t_array), 'rx')
-plt.plot(t_array, C)
+plt.plot(t_array, analytic(t_array), 'rx', label = 'Analytical Solution')
+plt.plot(t_array, C, 'b', label = 'Numerical Solution')
+plt.xlabel('time')
+plt.legend()
 plt.show()
 
 t_array, Cstep, *_ = solve_ode(1,1,1,0,1,1,1,dt = 2,Benchmark=True)
-plt.plot(t_array, analytic(t_array), 'rx')
-plt.plot(t_array, Cstep)
+plt.plot(t_array, analytic(t_array), 'rx', label = 'Analytical Solution')
+plt.plot(t_array, Cstep, 'b', label = 'Numerical Solution')
+plt.xlabel('time')
+plt.legend()
 plt.show()

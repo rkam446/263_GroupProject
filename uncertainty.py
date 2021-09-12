@@ -182,6 +182,7 @@ def model_ensemble(samples,b_1, b_2, b_3, tau, p_0, m_0, alpha):
 
             t_array, forecast, _ = solve_ode(b_1=b_1, b_2=b_2, b_3=b_3, tau=tau, p_0=p_0, m_0=m_0, alpha=alpha, forecast=True, multiplier=m, P_mar=k)
             ax.plot(t_array, forecast, label=f"{m * 100}% of current cow population", lw = 2, alpha = 1)
+        ax.scatter(tp, po,c ='red', label = 'Nitrate Concentration Data')
         ax.plot([],[],'k-', lw=0.5,alpha=0.4, label='model ensemble')
         
         ax.legend()
