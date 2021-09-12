@@ -29,7 +29,13 @@ ans = 6187477.006990
 check = x[1][-1] - ans
 assert check < tol
 def Plot_benchmark():
-    
+    '''
+    No inputs
+
+    No returns
+
+    Prints a graph of the ODE solver vs the analytical solution.
+    '''
     t_array, C, *_ = solve_ode(1,1,1,0,1,1,1,0.1,Benchmark=True)
     plt.plot(t_array, analytic(t_array), 'rx', label = 'Analytical Solution')
     plt.plot(t_array, C, 'b', label = 'Numerical Solution')
